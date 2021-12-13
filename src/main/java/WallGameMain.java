@@ -4,10 +4,18 @@ import com.googlecode.lanterna.input.KeyType;
 import com.googlecode.lanterna.terminal.DefaultTerminalFactory;
 import com.googlecode.lanterna.terminal.Terminal;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 
+
+
 public class WallGameMain {
+
+    static List<Position[]> walls = new ArrayList<>();
+
     public static void main(String[] args) throws Exception {
         TerminalSize ts = new TerminalSize(100, 120);
         DefaultTerminalFactory terminalFactory = new DefaultTerminalFactory();
@@ -17,129 +25,136 @@ public class WallGameMain {
 
         int x = 50;
         int y = 42;
-        int wallSize = 20;
+
         final char player = '\u263a';
-        final char block = '\u2588';
+
 
         terminal.setCursorPosition(x, y);
         terminal.putCharacter(player);
 
         terminal.flush();
 
-        int i = 0;
-        int j = 0;
-
-        int rok = ThreadLocalRandom.current().nextInt(0, 50 - wallSize);
-        int u = 100 - rok;
-        int rok2 = ThreadLocalRandom.current().nextInt((80 - wallSize), u);
-
-        Position[] wallPositions = new Position[wallSize];
-        Position[] wallPositions1 = new Position[wallSize];
 
         boolean continueReadingInput = true;
-        while (continueReadingInput) {
-            KeyStroke keyStroke = null;
 
+        while (continueReadingInput) {
+            int i = 0;
+            int j = 0;
+            KeyStroke keyStroke = null;
             do {
                 Thread.sleep(5);
                 keyStroke = terminal.pollInput();
                 //change from 100
-                if (i % 100 == 0) {
+                // % 50 motsvarar hastigheten
+
+                if (i % 50 == 0) {
                     if (j < 100) {
-                        for (int k = 0; k < wallSize; k++) {
-                            terminal.setCursorPosition(rok + k, j);
-                            terminal.putCharacter(block);
-                            terminal.setCursorPosition(rok + k, j - 1);
-                            terminal.putCharacter(' ');
-                            wallPositions[k] = new Position(rok + k, j);
+
+
+
+                       wall(terminal,keyStroke,x,y,continueReadingInput);
+                        j++;
+                        if (continueReadingInput == false) {
+                            break;
                         }
 
-                        j++;
-                        for (Position go : wallPositions) {
+                        terminal.flush();
+                        if (keyStroke != null) {
+                            KeyType type = keyStroke.getKeyType();
+                            Character c = keyStroke.getCharacter();
 
+                            if (c == Character.valueOf('q')) {
+                                continueReadingInput = false;
+                                terminal.close();
+                                System.out.println("quit");
+                            }
+                            int oldX = x;
+                            int oldY = y;
+                            switch (keyStroke.getKeyType()) {
+                                case ArrowDown:
+                                    y += 1;
+                                    break;
+                                case ArrowUp:
+                                    y -= 1;
+                                    break;
+                                case ArrowRight:
+                                    x += 1;
+                                    break;
+                                case ArrowLeft:
+                                    x -= 1;
+                                    break;
+                            }
+                            terminal.setCursorPosition(oldX, oldY);
+                            terminal.putCharacter(' ');
+                            terminal.setCursorPosition(x, y);
+                            terminal.putCharacter(player);
+
+                            terminal.flush();
+                        }
+                    }
+
+                    terminal.setCursorPosition(25, 25);
+                    String messageGO = "GAME OVER. YOU LOOSE!";
+                    for (int ind = 0; ind < messageGO.length(); ind++) {
+                        terminal.putCharacter(messageGO.charAt(ind));
+                    }
+
+                    terminal.flush();
+                }
+
+                i++;
+            }
+
+            while (keyStroke == null);
+
+        }
+    }
+
+
+
+
+                public static void wall (Terminal terminal, KeyStroke keyStroke,int x, int y, Boolean
+                continueReadingInput) throws IOException, InterruptedException {
+
+                    final char block = '\u2588';
+
+                    int wallSize = 20;
+                    int rok = ThreadLocalRandom.current().nextInt(0, 50 - wallSize);
+                    int u = 100 - rok;
+                    int rok2 = ThreadLocalRandom.current().nextInt((80 - wallSize), u);
+
+
+                    Position[] wallPositions = new Position[wallSize];
+                    Position[] wallPositions1 = new Position[wallSize];
+                    for (int k = 0; k < wallSize; k++) {
+                        wallPositions[k] = new Position(rok + k, 0);
+                        wallPositions1[k] = new Position(rok2 + k, 0);
+                    }
+                    walls.add(wallPositions);
+                    walls.add(wallPositions1);
+
+
+                    for (Position[] wall : walls) {
+
+                        for (Position go : wall) {
+                            terminal.setCursorPosition(go.getX(), go.getY());
+                            terminal.putCharacter(' ');
+                            go.setY(go.getY()+1);
+                            terminal.setCursorPosition(go.getX(), go.getY());
+                            terminal.putCharacter(block);
                             if (go.getX() == x && go.getY() == y) {
                                 System.out.println("Game Over");
                                 continueReadingInput = false;
                                 break;
                             }
                         }
-                        terminal.flush();
-                        //påbörjar kod för en andra wall slutar
-                        for (int k = 0; k < wallSize; k++) {
-                            terminal.setCursorPosition(rok2 + k, j);
-                            terminal.putCharacter(block);
-                            terminal.setCursorPosition(rok2 + k, j - 1);
-                            terminal.putCharacter(' ');
-                            wallPositions1[k] = new Position(rok2 + k, j);
-                        }
-
-
-                        for (Position go1 : wallPositions1) {
-                            if (go1.getX() == x && go1.getY() == y) {
-                                System.out.println("Game Over");
-                                continueReadingInput = false;
-                                break;
-                            }
-                        }
-
-                        if (continueReadingInput == false) {
-                            break;
-                        }
-
-                        terminal.flush();
                     }
-                }
-
-                    i++;
-                }
-
-                while (keyStroke == null) ;
-
-                if (keyStroke != null) {
-                    KeyType type = keyStroke.getKeyType();
-                    Character c = keyStroke.getCharacter();
-
-                    if (c == Character.valueOf('q')) {
-                        continueReadingInput = false;
-                        terminal.close();
-                        System.out.println("quit");
-                    }
-                    int oldX = x;
-                    int oldY = y;
-                    switch (keyStroke.getKeyType()) {
-                        case ArrowDown:
-                            y += 1;
-                            break;
-                        case ArrowUp:
-                            y -= 1;
-                            break;
-                        case ArrowRight:
-                            x += 1;
-                            break;
-                        case ArrowLeft:
-                            x -= 1;
-                            break;
-                    }
-                    terminal.setCursorPosition(oldX, oldY);
-                    terminal.putCharacter(' ');
-                    terminal.setCursorPosition(x, y);
-                    terminal.putCharacter(player);
-
                     terminal.flush();
+                    //påbörjar kod för en andra wall slutar
+
+
                 }
             }
-
-            terminal.setCursorPosition(25, 25);
-            String messageGO = "GAME OVER. YOU LOOSE!";
-            for (int ind = 0; ind < messageGO.length(); ind++) {
-                terminal.putCharacter(messageGO.charAt(ind));
-            }
-
-            terminal.flush();
-        }
-
-
-    }
 
 
 
