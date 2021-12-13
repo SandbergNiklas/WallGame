@@ -28,8 +28,10 @@ public class WallGameMain {
 
         int i = 0;
         int j = 0;
-        int rok = ThreadLocalRandom.current().nextInt(100 - wallSize);
-        int rok2 = ThreadLocalRandom.current().nextInt(100 - wallSize);
+
+        int rok = ThreadLocalRandom.current().nextInt(0, 50 - wallSize);
+        int u = 100 - rok;
+        int rok2 = ThreadLocalRandom.current().nextInt((80 - wallSize), u);
 
         Position[] wallPositions = new Position[wallSize];
         Position[] wallPositions1 = new Position[wallSize];
